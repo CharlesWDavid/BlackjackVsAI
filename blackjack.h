@@ -23,7 +23,7 @@ class Card
     Card(const Card& pCard);
     Card(Rank pRank, Suit pSuit);
 
-    int getValue();
+    int getValue() const;
  
     void displayCard();
 
@@ -47,7 +47,7 @@ class Hand
 
     void clear();
     
-    int getTotal();
+    int getTotal() const;
 
     void displayHand();
 
@@ -103,14 +103,14 @@ class HumanPlayer: public AbstractPlayer
 
     Hand& getHand();
 
-    void updateScore();
+    // void updateScore();
     
-    int getScore();
+    // int getScore();
 
-    void setWantDraw(char& answer);
+    void setWantDraw(char answer);
 
     private:
-    int aScore;
+    // int aScore;
     char wantDraw; // Char indicating if player wants to draw or not
 };
 
@@ -125,12 +125,12 @@ class ComputerPlayer: public AbstractPlayer
 
     Hand& getHand();
 
-    void updateScore();
+    // void updateScore();
 
-    int getScore();
+    // int getScore();
 
-    private:
-    int aScore;
+    // private:
+    // int aScore;
 };
 
 class BlackJackGame
@@ -145,8 +145,6 @@ class BlackJackGame
     Deck m_deck;
     ComputerPlayer m_casino;
     HumanPlayer m_player;
-    bool playerBusted = false;
-    bool casinoBusted = false;
 };
 
 

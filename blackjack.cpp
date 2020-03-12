@@ -9,6 +9,7 @@ using namespace std;
 
 Card::~Card(){}
 
+// Copy Constructor
 Card::Card(const Card& pCard)
 {
     aRank = pCard.getRank();
@@ -24,7 +25,7 @@ Card::Card(Rank pRank, Suit pSuit)
 // Returns the integer value of the Rank
 // If card is JACK, QUEEN, or KING add 10 points
 // ONE is worth 1 point but can be worth 11 if advantageous for the player (case taken care in getTotal())
-int Card::getValue()
+int Card::getValue() const
 { 
     if (aRank >= 11 && aRank <= 13) return 10; 
     return aRank; 
@@ -100,7 +101,7 @@ void Hand::add(Card& pCard){ aCards.push_back(pCard); }
 // Clear the Hand by clearing the vector
 void Hand::clear(){ aCards.clear(); }
 
-int Hand::getTotal() 
+int Hand::getTotal() const
 {
     int handTotal = 0;
     if (aCards.size() == 0) return handTotal; // Return 0 if there are no cards in hand
@@ -172,6 +173,8 @@ void Deck::shuffle()
 // Deals a Card from the Deck to a Hand
 void Deck::deal(Hand& pHand)
 {
+    if (aCards.empty()) return; // Can't deal a card if deck is empty
+
     Card cardToAdd = aCards.back();
     aCards.pop_back();
     pHand.add(cardToAdd);
@@ -220,11 +223,7 @@ void HumanPlayer::announce(bool playerBusted, bool casinoBusted, int playerScore
 
 Hand& HumanPlayer::getHand(){ return aHand; }
 
-void HumanPlayer::updateScore(){ aScore = aHand.getTotal(); } // Updates the player's score each time a new card is added
-
-int HumanPlayer::getScore(){ return aScore; }
-
-void HumanPlayer::setWantDraw(char& answer){ wantDraw = answer; } // Determines if player wants to draw or not
+void HumanPlayer::setWantDraw(char answer){ wantDraw = answer; } // Determines if player wants to draw or not
 
 // ####################### COMPUTER PLAYER ###############################
 
@@ -235,15 +234,11 @@ ComputerPlayer::~ComputerPlayer(){}
 // Implement inherited method
 bool ComputerPlayer::isDrawing() const
 {
-    if (aScore <= 16) return true;
+    if (aHand.getTotal() <= 16) return true;
     return false;
 }
 
 Hand& ComputerPlayer::getHand(){ return aHand; }
-
-void ComputerPlayer::updateScore(){ aScore = aHand.getTotal(); } // Updates the player's score each time a new card is added
-
-int ComputerPlayer::getScore(){ return aScore; }
 
 // ####################### BLACKJACK GAME ###############################
 
@@ -264,10 +259,6 @@ void BlackJackGame::play()
     m_deck.deal(m_player.getHand());
     m_deck.deal(m_casino.getHand());
 
-    // Updating the score field of each player after cards are added
-    m_casino.updateScore(); 
-    m_player.updateScore();
-
     // Displays dealer's hand
     cout << "Casino: ";
     m_casino.getHand().displayHand();
@@ -276,8 +267,12 @@ void BlackJackGame::play()
     // Displays the player's hand
     cout << "Player: ";
     m_player.getHand().displayHand();
-    cout << "[" << m_player.getScore() << "]" << endl;
+    cout << "[" << m_player.getHand().getTotal() << "]" << endl;
     
+    // Keeping track of which players bust
+    bool playerBusted = false; 
+    bool casinoBusted = false;
+
     char answer = 'y';
     cout << "Do you want to draw? (y/n): ";
     cin >> answer;
@@ -287,11 +282,10 @@ void BlackJackGame::play()
     while(m_player.isDrawing()){ 
         
         m_deck.deal(m_player.getHand());
-        m_player.updateScore(); // Update player's score after card is dealt
 
         cout << "Player: ";
         m_player.getHand().displayHand();
-        cout << "[" << m_player.getScore() << "]" << endl;
+        cout << "[" << m_player.getHand().getTotal() << "]" << endl;
 
         if (!m_player.isBusted()){ // If player hasn't busted they can ask for another card
             cout << "Do you want to draw? (y/n): ";
@@ -307,21 +301,20 @@ void BlackJackGame::play()
     if (!playerBusted){ 
         do {
             m_deck.deal(m_casino.getHand());
-            m_casino.updateScore();
 
             // Displays the dealer's hand
             cout << "Casino: ";
             m_casino.getHand().displayHand();
-            cout << "[" << m_casino.getScore() << "]" << endl;
+            cout << "[" << m_casino.getHand().getTotal() << "]" << endl;
 
         } while (m_casino.isDrawing()); // Dealer keeps drawing until over 16 or bust
     }
 
     if (m_casino.isBusted()) casinoBusted = true;
 
+    m_player.announce(playerBusted, casinoBusted, m_player.getHand().getTotal(), m_casino.getHand().getTotal());   
+
     m_player.getHand().clear(); // Clear both players hand at the end of the round
     m_casino.getHand().clear();
-
-    m_player.announce(playerBusted, casinoBusted, m_player.getScore(), m_casino.getScore());   
 }
 
